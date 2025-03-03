@@ -64,4 +64,4 @@ pip install numpy pandas scikit-learn biopython
 ### Submission:
 Submit both the code and the running results in a single zip archive named **"学号_姓名_课堂练习1.zip"**.
 
-**ddl: 2025/3/10 23:59**
+**ddl: 2025/3/24 23:59**
