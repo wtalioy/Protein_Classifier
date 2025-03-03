@@ -1,1 +1,1 @@
-# Protein_Classifier-LR
+# Protein_Classifier
