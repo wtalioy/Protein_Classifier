@@ -1,4 +1,3 @@
-import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -65,7 +64,7 @@ class LRFromScratch:
 
 
     def init_weight(self):
-        self.weight = np.random.randn(self.feature_size + 1)
+        self.weight = np.zeros(self.feature_size + 1)
         
 
     def phi(self, x):
@@ -158,8 +157,8 @@ def main(args):
     task_acc_test = []
     
 
-    # model = LRModel(max_iter=100, C=2.5)
-    model = LRFromScratch(max_iter=100, C=2)
+    model = LRModel(max_iter=100, C=2.5)
+    # model = LRFromScratch(max_iter=200, C=2.5, lr=5e-4)
 
     for i in range(len(data_list)):
         train_data, test_data = data_list[i]
