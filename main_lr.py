@@ -39,7 +39,7 @@ class LRModel(LogisticRegression):
         super.__init__(
             penalty='l2',
             dual=False,
-            tol=0.0001,
+            tol=1e-4,
             C=1.0,
             fit_intercept=True,
             intercept_scaling=1,
@@ -65,55 +65,51 @@ class LRFromScratch:
     # todo:
     def __init__(
         self,
-        penalty="l2",
-        dual=False,
         tol=1e-4,
         C=1.0,
-        fit_intercept=True,
-        intercept_scaling=1,
-        class_weight=None,
-        random_state=None,
-        solver="lbfgs",
         max_iter=100,
-        multi_class="deprecated",
-        verbose=0,
-        warm_start=False,
-        n_jobs=None,
-        l1_ratio=None,
+        lr=1e-4
     ):
-        self.penalty = penalty
-        self.dual = dual
         self.tol = tol
         self.C = C
-        self.fit_intercept = fit_intercept
-        self.intercept_scaling = intercept_scaling
-        self.class_weight = class_weight
-        self.random_state = random_state
-        self.solver = solver
         self.max_iter = max_iter
-        self.multi_class = multi_class
-        self.verbose = verbose
-        self.warm_start = warm_start
-        self.n_jobs = n_jobs
-        self.l1_ratio = l1_ratio
+        self.lr = lr
+
 
     def init_weight(self):
         self.weight = np.random.randn(self.feature_size)
     
-    def phi(self, x):
-        return np.array([1, x])
+    def h(self, x):
+        x = np.array([1, x])
+        return 1 / (1 + np.exp(-self.weight.dot(x)))
     
-    def gr_loss(self, train_data, train_targets):
-        for x, y in zip(train_data, train_targets):
-            h_x = 1 / (1 + np.exp(-self.weight.dot(self.phi(x))))
+    def loss(self, train_data, train_targets):
+        return -sum((y * np.log(self.h(x)) + (1 - y) * np.log(1 - self.h(x))) for x, y in zip(train_data, train_targets))
+    
+    def gradient(self, train_data, train_targets):
+        return sum((y - self.h(x)) * x for x, y in zip(train_data, train_targets))
             
 
     def train(self, train_data, train_targets):
+        assert train_data.shape[0] == train_targets.shape[0]
         self.feature_size = train_data.shape[-1]
+        self.init_weight()
+        for t in range(self.max_iter):
+            curr_loss = self.loss(train_data, train_targets)
+            gr = self.gradient(train_data, train_targets)
+            if np.max(np.abs(gr) <= self.tol):
+                return self
+            self.weight -= self.lr * gr
+        return self
         
     
     def evaluate(self, data, targets):
-        pass
+        assert self.weight is not None and data.shape[0] == targets.shape[0]
+        corr = 0
+        for x, y in zip(data, targets):
+            output = 1 if self.h(x) > 0.5 else 0
+            corr += (output == y)
+        return corr / data.shape[0]
 
 
 def data_preprocess(args):
