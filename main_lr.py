@@ -35,39 +35,27 @@ class LRModel(LogisticRegression):
         - float: Accuracy score of the model on the given data.
     """
 
-    def __init__(self):
-        super.__init__(
-            penalty='l2',
-            dual=False,
-            tol=1e-4,
-            C=1.0,
-            fit_intercept=True,
-            intercept_scaling=1,
-            class_weight=None,
-            random_state=None,
-            solver='lbfgs',
-            max_iter=100,
-            multi_class='auto',
-            verbose=0,
-            warm_start=False,
-            n_jobs=None,
-            l1_ratio=None,
+    def __init__(self, **kwargs):
+        super().__init__(
+            **kwargs,
         )
 
     def train(self, train_data, train_targets):
         self.fit(train_data, train_targets)
 
     def evaluate(self, data, targets):
-        self.score(data, targets)
+        return self.score(data, targets)
 
 
 class LRFromScratch:
+# todo:
+# todo:
     # todo:
     def __init__(
         self,
         tol=1e-4,
         C=1.0,
-        max_iter=100,
+        max_iter=200,
         lr=1e-4
     ):
         self.tol = tol
@@ -77,17 +65,34 @@ class LRFromScratch:
 
 
     def init_weight(self):
-        self.weight = np.random.randn(self.feature_size)
+        self.weight = np.random.randn(self.feature_size + 1)
+        
+
+    def phi(self, x):
+        return np.concatenate(([1], x))
     
     def h(self, x):
-        x = np.array([1, x])
-        return 1 / (1 + np.exp(-self.weight.dot(x)))
+        z = np.dot(self.weight, x)
+        z = np.clip(z, -100, 100)
+        return 1 / (1 + np.exp(-z))
     
     def loss(self, train_data, train_targets):
-        return -sum((y * np.log(self.h(x)) + (1 - y) * np.log(1 - self.h(x))) for x, y in zip(train_data, train_targets))
+        total_loss = 0
+        for x, y in zip(train_data, train_targets):
+            x = self.phi(x)
+            h_x = self.h(x)
+            total_loss += y * np.log(h_x) + (1 - y) * np.log(1 - h_x)
+        l2_reg = 0.5 * self.C * np.sum(self.weight[1:]**2)
+        return -total_loss/len(train_data) + l2_reg
     
     def gradient(self, train_data, train_targets):
-        return sum((y - self.h(x)) * x for x, y in zip(train_data, train_targets))
+        grad = np.zeros(self.feature_size + 1)
+        for x, y in zip(train_data, train_targets):
+            x = self.phi(x)
+            grad += (y - self.h(x)) * x
+        grad /= train_data.shape[0]
+        grad[1:] += self.C * self.weight[1:]
+        return grad
             
 
     def train(self, train_data, train_targets):
@@ -95,11 +100,15 @@ class LRFromScratch:
         self.feature_size = train_data.shape[-1]
         self.init_weight()
         for t in range(self.max_iter):
-            curr_loss = self.loss(train_data, train_targets)
+            # curr_loss = self.loss(train_data, train_targets)
             gr = self.gradient(train_data, train_targets)
-            if np.max(np.abs(gr) <= self.tol):
+            if np.max(np.abs(gr)) <= self.tol:
                 return self
             self.weight -= self.lr * gr
+            
+            if t > 0 and t % 10 == 0:
+                self.lr *= 0.25
+        
         return self
         
     
@@ -107,6 +116,7 @@ class LRFromScratch:
         assert self.weight is not None and data.shape[0] == targets.shape[0]
         corr = 0
         for x, y in zip(data, targets):
+            x = self.phi(x)
             output = 1 if self.h(x) > 0.5 else 0
             corr += (output == y)
         return corr / data.shape[0]
@@ -148,8 +158,9 @@ def main(args):
     task_acc_test = []
     
 
-    model = LRModel()
-    # model = LRFromScratch()
+    # model = LRModel(max_iter=100, C=2.5)
+    model = LRFromScratch(max_iter=100, C=2)
+
     for i in range(len(data_list)):
         train_data, test_data = data_list[i]
         train_targets, test_targets = target_list[i]
