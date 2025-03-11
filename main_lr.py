@@ -97,8 +97,20 @@ class LRFromScratch:
         self.n_jobs = n_jobs
         self.l1_ratio = l1_ratio
 
+    def init_weight(self):
+        self.weight = np.random.randn(self.feature_size)
+    
+    def phi(self, x):
+        return np.array([1, x])
+    
+    def gr_loss(self, train_data, train_targets):
+        for x, y in zip(train_data, train_targets):
+            h_x = 1 / (1 + np.exp(-self.weight.dot(self.phi(x))))
+            
+
     def train(self, train_data, train_targets):
-        pass
+        self.feature_size = train_data.shape[-1]
+        
     
     def evaluate(self, data, targets):
         pass
@@ -118,10 +130,14 @@ def data_preprocess(args):
         task_col = cast.iloc[:, task]
       
         ## todo: Try to load data/target
-        train_targets = task_col[task_col <= 2]
-        test_targets = task_col[task_col > 2]
         train_data = diagrams[task_col <= 2]
+        train_targets = task_col[task_col <= 2]
+        train_targets[train_targets == 2] = 0
+
         test_data = diagrams[task_col > 2]
+        test_targets = task_col[task_col > 2]
+        test_targets[test_targets == 3] = 1
+        test_targets[test_targets == 4] = 0
 
         data_list.append((train_data, test_data))
         target_list.append((train_targets, test_targets))
