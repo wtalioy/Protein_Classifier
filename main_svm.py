@@ -142,24 +142,9 @@ def data_preprocess(args):
     target_list = []
     
     for task in range(1, 56):
-        train_data = []
-        train_targets = []
-        test_data = []
-        test_targets = []
+        #### Todo：get data_list and target_list
         task_col = cast.iloc[:, task]
-        for i in range(len(task_col)):
-            if (task_col[i] == 1):
-                train_data.append(diagrams[i])
-                train_targets.append(1)
-            elif (task_col[i] == 2):
-                train_data.append(diagrams[i])
-                train_targets.append(0)
-            elif (task_col[i] == 3):
-                test_data.append(diagrams[i])
-                test_targets.append(1)
-            else:
-                test_data.append(diagrams[i])
-                test_targets.append(0)
+        
         data_list.append((train_data, test_data))
         target_list.append((train_targets, test_targets))
     
