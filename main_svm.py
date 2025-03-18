@@ -142,8 +142,9 @@ def data_preprocess(args):
     target_list = []
     
     for task in range(1, 56):
-        #### Todo：get data_list and target_list
         task_col = cast.iloc[:, task]
+
+        #### Todo: Try to load data/target
         
         data_list.append((train_data, test_data))
         target_list.append((train_targets, test_targets))
