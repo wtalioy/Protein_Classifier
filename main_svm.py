@@ -9,7 +9,7 @@ from sklearn.svm import SVC
 from Bio.PDB import PDBParser
 
 
-class SVMModel:
+class SVMModel(SVC):
 # Todo
     """
         Initialize Support Vector Machine (SVM from sklearn) model.
@@ -39,14 +39,14 @@ class SVMModel:
     """
 
     def __init__(self, C=1.0, kernel='rbf'):
-        pass
+        super().__init__(C=C, kernel=kernel)
 
     def train(self, train_data, train_targets):
-        pass
-
+        self.fit(train_data, train_targets)
 
     def evaluate(self, data, targets):
-        pass
+        return self.score(data, targets)
+    
 
 class SVMFromScratch:
     def __init__(self, lr=0.001, num_iter=200, c=0.01):
@@ -75,6 +75,15 @@ class SVMFromScratch:
     
     def standardize(self, X):
         return (X - self.mean) / self.std
+    
+    def gradient(self, d, x, y):
+        if y * d >= 1:
+            dw = self.weights
+            db = 0
+        else:
+            dw = self.weights - self.C * y * x
+            db = -self.C * y
+        return dw, db
 
     #  todo:
     def train(self, train_data, train_targets):
@@ -97,15 +106,14 @@ class SVMFromScratch:
         # Gradient descent updates parameters
         for iteration in range(self.num_iter):
             for i in range(num_samples):  
-                pass
                 # ### Todo
                 # ### Calculate the output of a svm model
-                # svm_output = 
+                svm_output = np.dot(X[i], self.weights) + self.bias
                 # ### Calculate the gradient dw, db  (提示：根据y[i]与svm_output是否符号一致，分类讨论dw，db)
-                
+                dw, db = self.gradient(svm_output, X[i], y[i])
                 # ### Update weights and bias
-                # self.weights -= 
-                # self.bias -= 
+                self.weights -= self.lr * dw
+                self.bias -= self.lr * db
 
             
             if iteration % 10 == 0:
