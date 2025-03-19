@@ -145,6 +145,14 @@ def data_preprocess(args):
         task_col = cast.iloc[:, task]
 
         #### Todo: Try to load data/target
+        train_data = diagrams[task_col <= 2]
+        train_targets = task_col[task_col <= 2]
+        train_targets[train_targets == 2] = 0
+
+        test_data = diagrams[task_col > 2]
+        test_targets = task_col[task_col > 2]
+        test_targets[test_targets == 3] = 1
+        test_targets[test_targets == 4] = 0
         
         data_list.append((train_data, test_data))
         target_list.append((train_targets, test_targets))
